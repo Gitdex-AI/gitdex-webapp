@@ -4,7 +4,7 @@
 
 AI-native software demand & solution network. People look for software from their own AI client; if nothing fits they publish the need as a request; creators find or build software and propose it; the requester decides whether it is solved.
 
-Product spec: [docs/GitDex_PRD.md](docs/GitDex_PRD.md). Principles: **AI Client First · Web Second · API Native · No Server-side LLM**.
+Product spec: [docs/GitDex_PRD.md](docs/GitDex_PRD.md) ([中文](docs/GitDex_PRD.zh.md)). Principles: **AI Client First · Web Second · API Native · No Server-side LLM**.
 
 ## Architecture
 

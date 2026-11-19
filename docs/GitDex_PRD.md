@@ -1,167 +1,187 @@
-# GitDex.ai 产品需求文档（PRD）
+# GitDex.ai Product Requirements Document (PRD)
 
-> **版本**：V1.0（产品规划稿）  
-> **日期**：2026-11-15  
-> **状态**：待开发  
-> **产品定位**：AI-native 软件供需网络（Software Demand & Solution Network）  
-> **原则**：AI Client First · Web Second · API Native · No Server-side LLM
+> **Language**: English · [中文](GitDex_PRD.zh.md)  
+> **Version**: V1.0  
+> **Date**: 2026-11-15 (revised 2026-11-18 to match the implementation)  
+> **Status**: V1 is live at [gitdex.ai](https://gitdex.ai)  
+> **Positioning**: AI-native Software Demand & Solution Network  
+> **Principles**: AI Client First · Web Second · API Native · No Server-side LLM
+
+> This document began as the planning draft written before development. Sections 5, 6, 8, 9 and 10 have been revised to match what was built; sections 13–16 keep the original plan as design background. Where details differ, the code is authoritative.
 
 ---
 
-## 1. 执行摘要
+## 1. Executive summary
 
-GitDex 是一个连接**寻找软件的消费者**和**能够发现或开发软件的创作者**的开放平台。消费者通过熟悉的 AI 客户端（如 ChatGPT、Claude）寻找已有软件；若找不到满意产品，则可授权 AI 将需求发布到 GitDex。创作者通过 AI 客户端（如 Claude Code、Codex）查询公开需求，可以帮助寻找现成解决方案，或使用 AI 编程工具开发新软件并提交。消费者验收后，需求才被标记为已解决。
+GitDex is an open platform that connects **consumers looking for software** with **creators who can find or build it**. Consumers look for existing software through the AI client they already use (ChatGPT, Claude and others); if nothing fits, they can authorize the AI to publish the need on GitDex. Creators query public requests through their own AI client (Claude Code, Codex and others) and either help find an existing solution or build new software with AI coding tools and submit it. A request is marked resolved only after the consumer accepts a solution.
 
-GitDex **不运行服务端大模型**，也不强制判断软件是否由 AI 创作。AI 客户端承担自然语言理解、联网研究（如客户端具备）、信息整理和匹配推理；GitDex 负责标准化数据、工具接口、权限、审计、需求与软件关系、验收结果及跨客户端共享。Web 端主要是传统黄页式列表与详情，不提供 AI 对话或语义搜索。
+GitDex **runs no server-side language model** and does not try to judge whether software was made with AI. The AI client handles natural-language understanding, web research (where the client has it), organizing information and matching. GitDex handles standardized data, tool interfaces, permissions, audit, the relationships between requests and software, acceptance results and sharing across clients. The website is a traditional directory of lists and detail pages, with no AI chat and no semantic search.
 
-**核心价值主张**：消费者 *Search → Request*；创作者 *Find → Build/Submit*；平台 *Connect → Record → Verify*。
+**Core value proposition**: consumers *Search → Request*; creators *Find → Build/Submit*; the platform *Connect → Record → Verify*.
 
-**候选标语**：*Search. Request. Create.* / *Find it. Build it. Share it.*（最终品牌文案待定）。
+**Candidate taglines**: *Search. Request. Create.* / *Find it. Build it. Share it.* (final brand copy undecided).
 
-## 2. 产品目标和边界
+## 2. Goals and boundaries
 
-### 2.1 用户角色
+### 2.1 Roles
 
-| 角色 | 主要目标 | 核心动作 |
+| Role | Main goal | Core actions |
 |---|---|---|
-| 消费者（Requester） | 找到满足功能、价格、平台限制的软件 | 查找、比较、发布需求、关注需求、验收方案 |
-| 创作者（Creator） | 发现真实需求，为用户提供有用方案并获得曝光 | 浏览需求、推荐已有软件、开发并提交软件、提议解决方案 |
-| AI Agent（客户端） | 按用户意图执行标准化工作流 | 调用 MCP/API、查找及整理数据、呈现证据、取得确认 |
-| 平台管理员 | 保证数据质量和安全 | 处理举报、去重争议、违规信息、滥用和审计 |
+| Consumer (Requester) | Find software that meets their feature, price and platform constraints | Search, compare, publish a request, follow a request, accept or reject a solution |
+| Creator | Discover real needs, offer useful solutions and gain exposure | Browse requests, recommend existing software, build and submit software, propose a solution |
+| AI Agent (client) | Carry out standardized workflows according to the user's intent | Call MCP/API, find and organize data, present evidence, obtain confirmation |
+| Platform administrator | Keep data quality and safety | Handle reports, duplicate disputes, violations, abuse and audit |
 
-同一个账户可以同时是消费者和创作者，无需强制选择角色。
+One account can be both a consumer and a creator; nobody has to choose a role.
 
-### 2.2 V1 目标
+### 2.2 V1 goals
 
-1. 让用户在支持的外部 AI 客户端中完成：查询软件、发布需求、查询需求、提交软件、提出解决方案、验收方案。
-2. 提供**机器可读并对 Agent 友好**的工作指南、MCP Tools、REST API、OpenAPI Schema 和具体工作流。
-3. Web 仅提供可浏览的软件黄页、需求黄页、解决方案详情、连接说明及轻量表单。
-4. 用户或 Agent 提交的新数据可在授权和质量校验后持久化，供所有客户端复用。
-5. 全部核心工作流**无需调用 GitDex 自有的 LLM 服务**。
+1. Let users do the following from a supported external AI client: search software, publish a request, search requests, submit software, propose a solution, and accept or reject a solution.
+2. Provide **machine-readable, agent-friendly** guides, MCP tools, a REST API, an OpenAPI schema and concrete workflows.
+3. The website offers only a browsable software directory, request directory, solution details, connection instructions and lightweight forms.
+4. New data submitted by users or agents is stored after authorization and quality checks, and is reusable by every client.
+5. No core workflow **requires an LLM service run by GitDex**.
 
-### 2.3 V1 非目标
+### 2.3 V1 non-goals
 
-- GitDex 自建 AI 聊天室、RAG Agent、自动爬虫网络、实时 AI 搜索或语义向量推荐。
-- 证明软件是否由 AI 编写；不将 AI-built 作为收录标准。
-- 悬赏竞标、托管付款、开发合同、复杂项目管理、开发者社交社区。
-- 由 GitDex 自动生成代码或代用户部署产品。
-- 以未经确认的“AI 判断”自动关闭需求。
-- 以浏览器自然语言聊天作为主要入口。
+- A GitDex-run AI chat room, RAG agent, automated crawler network, real-time AI search or semantic vector recommendations.
+- Proving whether software was written by AI; "AI-built" is not a listing criterion.
+- Bounties and bidding, escrow payments, development contracts, complex project management, a developer social community.
+- GitDex generating code or deploying products on a user's behalf.
+- Closing a request automatically on an unconfirmed "AI judgment".
+- Natural-language chat in the browser as the main entry point.
 
-## 3. 核心产品原则
+## 3. Core product principles
 
-1. **AI 在客户端，事实在平台**：各 AI 客户端负责研究和推理，GitDex 提供可信的数据操作与共享记录。
-2. **需求先于产品**：索引消费者的真实目标与必须满足的条件，而非只有软件名称。
-3. **先找，后造**：创作者可以推荐现成软件，也可以自行开发；两者地位平等。
-4. **搜索失败转化为需求机会**：未找到合适软件时，建议用户发布需求，但不得自动发布。
-5. **每个写操作都受授权控制**：Prompt 不替代 API 权限或用户确认。
-6. **区分提议与解决**：创作者提交候选方案不等于消费者确认问题已解决。
-7. **数据有来源、有状态、可纠错**：信息允许未知；不能把宣传描述伪装为已验证事实。
-8. **开放接口、轻量网站、低运营成本**：优先使用结构化读写，不向 Web 端转嫁 AI 运行成本。
+1. **AI in the client, facts on the platform**: each AI client does the research and reasoning; GitDex provides trustworthy data operations and shared records.
+2. **Demand before product**: index the consumer's real goal and the conditions that must be met, not only software names.
+3. **Find before building**: a creator may recommend existing software or build something new; the two are equal.
+4. **A failed search becomes a demand opportunity**: when nothing suitable is found, suggest publishing a request, but never publish automatically.
+5. **Every write is controlled by authorization**: a prompt does not replace API permissions or user confirmation.
+6. **A proposal is not a resolution**: a creator submitting a candidate does not mean the consumer has confirmed the problem is solved.
+7. **Data has sources and status and can be corrected**: unknown is allowed; marketing copy must not be presented as verified fact.
+8. **Open interfaces, a light website, low running cost**: prefer structured reads and writes; do not push AI running costs onto the web side.
 
-## 4. 用户旅程
+## 4. User journeys
 
-### 4.1 消费者：Search → Request → Accept/Reject
+### 4.1 Consumer: Search → Request → Accept/Reject
 
-1. 用户在 AI 客户端提出软件需求或某付费产品的替代需求。
-2. Agent 解析：目标任务、必需功能、可选偏好、系统平台、价格上限、隐私/离线要求。
-3. Agent 调用 `search_software` 查询 GitDex 已有记录，并在其客户端支持时使用外部网络研究补充候选。
-4. Agent 返回候选软件的匹配理由、缺失能力、价格与信息来源，**不宣称无法找到即不存在**。
-5. 如果用户表示不满意，Agent 调用 `search_requests` 检查是否有相似需求。
-6. 已有需求：征得同意后调用 `support_request`；没有合适需求：生成草稿、展示将公开的字段，用户确认后调用 `create_request`。
-7. 用户可以选择接收通知。新候选方案出现时，平台通过已授权渠道提醒用户。
-8. 用户实际试用后，调用 `confirm_solution` 提交“满足 / 部分满足 / 不满足”及反馈。确认解决须由授权的需求者执行。
+1. The user describes a software need, or asks for an alternative to a paid product, in their AI client.
+2. The agent works out the task, required features, optional preferences, platform, price ceiling and privacy/offline requirements.
+3. The agent calls `search_software` to query existing GitDex records and, where the client supports it, adds candidates from external web research.
+4. The agent returns candidates with match reasons, missing capabilities, prices and sources, and **does not claim that not finding something means it does not exist**.
+5. If the user is not satisfied, the agent calls `search_requests` to check for a similar request.
+6. If a request exists: with consent, call `support_request`. If none fits: draft one, show the fields that will be public, and call `create_request` after the user confirms.
+7. The user may choose to be notified. When a new candidate appears, the platform alerts them through an authorized channel.
+8. After actually trying it, the user calls `confirm_solution` to record "met / partially met / not met" with feedback. Confirming a resolution must be done by the authorized requester.
 
-**边界**：普通软件搜索不应自动创建公开需求；发布请求不能隐含公开私人聊天记录。
+**Boundary**: an ordinary software search must not create a public request automatically; publishing a request must not imply publishing private chat history.
 
-### 4.2 创作者：Discover → Find/Build → Propose
+### 4.2 Creator: Discover → Find/Build → Propose
 
-1. 创作者在 AI 客户端查询公开需求，如“免费 iOS、可纯客户端、支持离线的需求”。
-2. Agent 调用 `search_requests` / `get_request` 提供需求详情、关键约束、兴趣人数及已有提案。
-3. 创作者可选择：
-   - **Find**：查找已经存在的软件，向 GitDex 提交软件资料并提议关联。
-   - **Build**：借助自己使用的 AI 编程工具开发软件；GitDex 不参与或保证代码开发。
-4. Agent 对软件官网、代码仓库、文档进行可获取的核验，调用 `search_software` 去重。
-5. 用户确认提交内容后，调用 `submit_software`（如果没有记录），再调用 `propose_solution`，明确覆盖的需求及已知限制。
-6. 平台通知相关需求者进行实际验收；创作者不能直接给自身提案标记“已解决”。
+1. The creator queries public requests in their AI client, for example "free iOS requests that can be client-only and work offline".
+2. The agent calls `search_requests` / `get_request` for the request details, key constraints, number of interested users and existing proposals.
+3. The creator can choose to:
+   - **Find**: locate software that already exists, submit its record to GitDex and propose it for the request.
+   - **Build**: develop software with their own AI coding tools; GitDex takes no part in, and does not guarantee, the development.
+4. The agent checks what it can of the software's website, repository and documentation, and calls `search_software` to avoid duplicates.
+5. After the user confirms the submission, call `submit_software` (if there is no record yet), then `propose_solution`, stating which requirements are covered and the known limits.
+6. The platform notifies the relevant requesters to try it; a creator cannot mark their own proposal as "resolved".
 
-### 4.3 无 AI 客户端的 Web 用户
+### 4.3 Web users without an AI client
 
-- 浏览软件、需求、解决方案和创作者页面；使用普通分类筛选与精确/关键词过滤。
-- 可通过轻量表单发布需求、提出方案或验收。提交软件只通过 AI 客户端（MCP / REST）完成：软件资料包含图标、截图和中英两个版本，不提供网页表单。
-- 页面提供“Connect to ChatGPT / Claude / MCP Client”引导；具体安装方式以各平台当时支持情况为准。
-- 不提供网页 AI 对话、服务端实时 LLM 研究或智能搜索。
+- Browse software, requests, solutions and user pages; use ordinary category filters and exact/keyword filtering.
+- Publish a request, propose a solution or record a verdict through lightweight forms. Submitting software is done only through an AI client (MCP / REST): a software record includes an icon, screenshots and both language versions, and there is no web form for it.
+- Pages offer "Connect to ChatGPT / Claude / MCP Client" guidance; the exact installation steps follow whatever each platform supports at the time.
+- No AI chat in the browser, no server-side real-time LLM research, no smart search.
 
-## 5. V1 功能模块
+## 5. V1 feature modules
 
-### 5.1 Software Directory（软件黄页）
+### 5.1 Software Directory
 
-- 软件名称、官网地址、可选代码库 URL、简述、功能列表、系统平台、价格模型、使用限制、许可证（如适用）、提交者、核验状态和更新时间。
-- 支持类别、平台、价格类型等静态过滤；软件详情展示相关需求和解决方案。
-- 软件来源可能为创作者提交或 Agent 代表用户提交；记录来源，不将 AI 输出自动等同独立核验。
-- 同域名/规范化 URL/仓库标识用于初步去重。出现同名不同产品时支持人工裁决。
+- Name, website, optional repository URL, short description, capability list, platforms, pricing model, usage limits, license (where applicable), submitter, verification status and update time.
+- Static filters by category, platform and pricing type; a software page shows its related requests and solutions.
+- A record may come from a creator or from an agent acting for a user; the source is recorded, and AI output is never treated as independent verification.
+- Same domain / normalized URL / repository identifier is used for first-pass duplicate detection. Same-name-different-product cases are settled by a person.
 
-### 5.2 Requests Directory（需求黄页）
+### 5.2 Requests Directory
 
-- 标题、需求目标、必需能力、可选能力、目标平台、价格限制、可选其他约束、状态、兴趣人数、提案数量和公开创建时间。
-- 支持加入类似需求（支持/关注）；相似度只能作为建议，不能直接合并具有不同关键约束的需求。
-- 发布前显示公开预览及隐私提醒。
+- Title, goal, must-have capabilities, nice-to-have capabilities, target platforms, price constraint, other optional constraints, status, number of interested users, number of proposals and public creation time.
+- Users can join a similar request (support/follow); similarity is only a suggestion and must not merge requests whose key constraints differ.
+- A public preview and a privacy reminder are shown before publishing.
 
-### 5.3 Solutions（方案关系）
+### 5.3 Solutions
 
-- 一个软件可以服务多个需求，一个需求也可对应多个方案。
-- 每条提案记录：软件 ID、需求 ID、覆盖说明、未覆盖项、证据、提交者和状态。
-- 状态明确区分 `proposed`、`accepted`、`rejected`、`withdrawn`；需求状态另行管理。
-- 需求者可确认“完全满足 / 部分满足 / 不满足”；V1 仅“完全满足”可将其个人需求标记为已解决。
-- 共同公开需求下，不能由单个支持者的确认自动代表所有支持者满意；采用**原始需求者确认 + 其他用户各自反馈**的模型。
+- One piece of software can serve several requests, and one request can have several proposals.
+- Each proposal records: software ID, request ID, coverage notes, unmet items, evidence, proposer and status.
+- Status clearly separates `proposed`, `accepted`, `rejected` and `withdrawn`; request status is managed separately.
+- The requester can record "fully met / partially met / not met"; in V1 only "fully met" marks their request as resolved.
+- On a shared public request, one supporter's confirmation never stands for every supporter; the model is **the original requester confirms + other users each give their own feedback**.
 
-### 5.4 Interests & Notifications（兴趣与通知）
+### 5.4 Interests & Notifications
 
-- 用户可支持或关注一个需求，去重计数；不声称这些计数代表实际购买意愿。
-- 新提案、验收提醒、需求状态更新可通知已订阅用户。
-- V1 首选站内消息 / 选择性邮件，需有通知授权和取消订阅功能；不能假定第三方 AI 客户端具备推送能力。
+- A user can support or follow a request; counts are de-duplicated and are not presented as purchase intent.
+- New proposals, acceptance reminders and request status changes can notify subscribed users.
+- V1 has in-app notifications only; the email preference is stored, but no email is sent yet. A third-party AI client cannot be assumed to support push.
 
-### 5.5 Accounts & Moderation（身份与治理）
+### 5.5 Accounts & Moderation
 
-- 匿名用户允许公开查询；写操作要求可靠身份验证（例如 OAuth 或邮件登录）。
-- OAuth 授权范围和账户级写权限；记录操作来源客户端、用户 ID、时间、变更摘要。
-- URL 安全校验、提交速率限制、举报/撤回、垃圾内容检测、后台审核和封禁能力。
-- 防止 AI Agent 依据来自网页或需求正文的恶意指令执行未授权动作（提示注入）。
+- Anonymous users can query publicly; writes require reliable authentication (for example OAuth or email sign-in).
+- OAuth scopes and account-level write permission; each action records the originating client, user ID, time and a summary of the change.
+- URL safety checks, submission rate limits, reporting and withdrawal, spam detection, moderation and suspension.
+- Prevent an AI agent from taking unauthorized actions on malicious instructions found in a web page or in request text (prompt injection).
+- Content is published first and handled afterwards: any signed-in user can report a record; an unreviewed software record is flagged automatically once 3 different users have reported it.
+- Moderation is open only to `is_admin` accounts and only from a signed-in browser session at `/admin`: it is not an MCP tool and cannot be called with an API token or by an OAuth client. Every moderation action is audited and notifies the author.
 
-## 6. Agent 接入体系
+### 5.6 Two languages and edit history
 
-### 6.1 组成
+- Record text is bilingual (English and Chinese): each record has one primary `language` and carries the other one in `translations`; a page shows one version, never both.
+- A software record can carry an icon and screenshots, all submitter-supplied `https` URLs; the server never fetches them.
+- Edits append and never overwrite: every change saves the replaced version and increments `version`, and the history is public. Only the author can edit; a request freezes once it has a proposal, and a proposal once it has a verdict.
 
-| 层级 | 产物 | 职责 |
+## 6. Agent integration
+
+### 6.1 Components
+
+| Layer | Artifact | Responsibility |
 |---|---|---|
-| MCP Server | `/mcp` | 客户端统一访问工具、提示与可用资源 |
-| REST API | `/api/v1/*` | 提供与 MCP 一致的业务能力 |
-| OpenAPI | `/openapi.json` | 接口结构、入参出参、错误码规范 |
-| Agent Guide | `/ai/guide.md` | 平台定位与默认行为规则 |
-| Workflows | `/ai/find.md` 等 | 具体四大工作流与操作顺序 |
-| MCP Tool descriptions | 每个工具内置 | 选择工具的时机、约束、权限、副作用 |
-| MCP Prompts | `find_software` 等 | 可由用户/客户端主动选用的任务模板 |
+| MCP Server | `/mcp` | One place for clients to reach tools, prompts and resources (sign-in required) |
+| MCP Server (read-only) | `/mcp/public` | Anonymous; public read-only tools only |
+| REST API | `/api/v1/*` | The same business capabilities as MCP |
+| OpenAPI | `/openapi.json` | Interface structure, inputs, outputs and error codes |
+| Agent Guide | `/ai/guide.md` | What the platform is and its default rules of behavior |
+| Workflows | `/ai/find.md` and others | The concrete workflows and their order of operations |
+| MCP Tool descriptions | Built into each tool | When to choose the tool, constraints, permissions, side effects |
+| MCP Prompts | `find_software` and others | Task templates a user or client can choose to use |
 
-> **注意**：MCP Prompts 不能保证在所有客户端自动执行。必须将关键规则同时写入工具描述和服务端校验；各客户端连接与审核能力可能不同。以上路径为**拟定接口**，不是已部署地址。
+> **Note**: MCP prompts are not guaranteed to run automatically in every client. Key rules must be written into both the tool descriptions and server-side checks; clients differ in how they connect and what they review. REST, MCP and OpenAPI are all generated from one operation registry (`_shared/operations.ts`).
 
 ### 6.2 V1 MCP Tools
 
-| Tool | 输入核心字段 | 返回 | 权限/副作用 |
+| Tool | Core input fields | Returns | Permission / side effect |
 |---|---|---|---|
-| `search_software` | `query`, `platforms?`, `pricing?`, `limit?` | 软件列表、匹配字段、来源 | 公共只读 |
-| `get_software` | `software_id` | 软件详情与来源 | 公共只读 |
-| `search_requests` | `query?`, `status?`, `platform?`, `limit?` | 需求列表 | 公共只读 |
-| `get_request` | `request_id` | 需求详情、约束、提案 | 公共只读 |
-| `create_request` | 结构化需求、公开同意标记 | 需求 ID、状态 | 认证 + 明确确认 |
-| `support_request` | `request_id` | 关注记录 | 认证 + 授权 |
-| `submit_software` | URL、元数据、来源 | 软件 ID、审核状态 | 认证 + 明确确认 |
-| `propose_solution` | `request_id`, `software_id`, 覆盖说明 | 提案 ID、状态 | 认证 + 明确确认 |
-| `confirm_solution` | `request_id`, `proposal_id`, `verdict`, `feedback?` | 验收结果 | 需求所有者授权 |
-| `get_my_activity` | 可选类型/分页 | 本人需求、软件、提案、订阅 | 认证只读 |
+| `search_software` | `query`, `platforms?`, `pricing?`, `limit?` | Software list, matched fields, sources | Public, read-only |
+| `get_software` | `software_id` | Software details and sources | Public, read-only |
+| `search_requests` | `query?`, `status?`, `platform?`, `limit?` | Request list | Public, read-only |
+| `get_request` | `request_id` | Request details, constraints, proposals | Public, read-only |
+| `create_request` | Structured request, public-consent flag | Request ID, status | Signed in + explicit confirmation |
+| `support_request` | `request_id` | Follow record | Signed in + authorized |
+| `submit_software` | URL, metadata, sources | Software ID, review status | Signed in + explicit confirmation |
+| `propose_solution` | `request_id`, `software_id`, coverage notes | Proposal ID, status | Signed in + explicit confirmation |
+| `confirm_solution` | `request_id`, `proposal_id`, `verdict`, `feedback?` | Verdict | Request owner only |
+| `get_my_activity` | Optional type / paging | Own requests, software, proposals, subscriptions | Signed in, read-only |
+| `get_solution` | `proposal_id` | Proposal details and verdict status | Public, read-only |
+| `get_user` | `user_id` | A user's public profile and public records | Public, read-only |
+| `get_history` | Record type, record ID | Earlier versions of the record | Public, read-only |
+| `update_software` / `update_request` / `update_solution` | Record ID, fields to change | New version | Author only + explicit confirmation |
+| `set_translations` | Record type, record ID, text in the other language | Updated record | Author only + explicit confirmation |
+| `withdraw_proposal` | `proposal_id` | Proposal status | Proposer + explicit confirmation |
+| `close_request` | `request_id` | Request status | Request owner + explicit confirmation |
+| `report_content` | Record type, record ID, reason | Report record | Signed in |
 
-可延后：`update_request`、`update_software`、`withdraw_proposal`、`report_content` 等完善编辑与治理接口；若 V1 允许 Web 编辑，必须同步设计对应 API 或明确仅 Web 可编辑。
+Account, notification, API token and moderation operations exist in REST only and are not MCP tools.
 
-### 6.3 REST API 示例（草案）
+### 6.3 REST API examples
 
 ```http
 GET  /api/v1/software?q=offline+notes&platform=ios
@@ -174,13 +194,21 @@ POST /api/v1/software
 POST /api/v1/solutions
 POST /api/v1/solutions/{id}/confirm
 GET  /api/v1/me/activity
+PATCH /api/v1/requests/{id}
+POST /api/v1/requests/{id}/close
+POST /api/v1/solutions/{id}/withdraw
+POST /api/v1/translations
+POST /api/v1/reports
+GET  /api/v1/history
 ```
 
-所有写操作要求鉴权和幂等键（如 `Idempotency-Key`），以防 Agent 重试产生重复提交；使用一致的错误代码，如 `AUTH_REQUIRED`、`CONFIRMATION_REQUIRED`、`DUPLICATE_CANDIDATE`、`VALIDATION_FAILED`、`RATE_LIMITED`、`FORBIDDEN`。
+The full list is in `/openapi.json`.
 
-## 7. GitDex Agent Guide：指令规范
+Every write requires authentication and an idempotency key (such as `Idempotency-Key`) so that an agent's retry cannot create a duplicate. Error codes are consistent, for example `AUTH_REQUIRED`, `CONFIRMATION_REQUIRED`, `DUPLICATE_CANDIDATE`, `VALIDATION_FAILED`, `RATE_LIMITED`, `FORBIDDEN`.
 
-以下内容为拟发布的 `/ai/guide.md` 基础文本；可据此拆为独立工作流文档。
+## 7. GitDex Agent Guide: instruction rules
+
+The text below is the base text as first drafted; the live version is `/ai/guide.md` and the workflow documents.
 
 ```markdown
 # GitDex Agent Guide v1
@@ -236,11 +264,11 @@ relationships; it does not run an AI model on the server.
 - Never infer acceptance from a click or from the creator's claim.
 ```
 
-### 7.1 Prompt / Tool 文档规范
+### 7.1 Prompt / tool documentation rules
 
-每个 Tool 描述至少包含：**何时使用、所需信息、是否有副作用、谁有权限、调用前是否需确认、失败后的恢复方式**。例如 `create_request` 的 Tool 描述须明确：只有用户明确要求发布且已看到公开预览后才调用；查询和搜索请求不意味着同意公开发布。
+Every tool description contains at least: **when to use it, what information is needed, whether it has side effects, who may call it, whether confirmation is required before calling, and how to recover from failure**. For example, the description of `create_request` must state that it is called only when the user has explicitly asked to publish and has seen the public preview; a query or a search is not consent to publish.
 
-### 7.2 建议提供的独立文件
+### 7.2 Standalone files provided
 
 ```text
 /ai/guide.md
@@ -254,9 +282,9 @@ relationships; it does not run an AI model on the server.
 /api/v1/...
 ```
 
-## 8. 数据模型（逻辑层）
+## 8. Data model (logical)
 
-### 8.1 核心实体
+### 8.1 Core entities
 
 ```text
 User 1---N Request
@@ -269,22 +297,22 @@ Software 1---N Evidence
 Request 1---N Revision/AuditEvent
 ```
 
-### 8.2 字段建议
+### 8.2 Fields
 
-**users**
-- `id`, `display_name`, `auth_provider`, `created_at`, `status`, `notification_preferences`
+**profiles** (users)
+- `id`, `display_name`, `auth_provider`, `created_at`, `status`, `is_admin`, `notification_preferences`
 
 **software**
-- `id`, `name`, `canonical_url`, `repository_url?`, `app_store_url?`, `google_play_url?`, `description`, `capabilities[]`, `platforms[]`, `pricing_type`, `pricing_notes?`, `license?`, `category[]`, `source_refs[]`, `submitted_by`, `review_status`, `created_at`, `updated_at`
+- `id`, `name`, `canonical_url`, `repository_url?`, `app_store_url?`, `google_play_url?`, `description`, `capabilities[]`, `platforms[]`, `pricing_type`, `pricing_notes?`, `license?`, `category[]`, `source_refs[]`, `icon_url?`, `screenshots[]`, `language`, `translations`, `version`, `submitted_by`, `review_status`, `created_at`, `updated_at`
 
 **requests**
-- `id`, `owner_user_id`, `title`, `goal`, `must_have[]`, `nice_to_have[]`, `platforms[]`, `price_constraint?`, `other_constraints[]`, `status`, `visibility`, `created_at`, `updated_at`
+- `id`, `owner_user_id`, `title`, `goal`, `must_have[]`, `nice_to_have[]`, `platforms[]`, `price_constraint?`, `other_constraints[]`, `language`, `translations`, `version`, `status`, `visibility`, `created_at`, `updated_at`
 
 **interests**
 - `id`, `user_id`, `request_id`, `created_at`, `notifications_enabled`
 
 **solution_proposals**
-- `id`, `request_id`, `software_id`, `proposed_by`, `coverage_notes`, `unmet_requirements[]`, `evidence_refs[]`, `status`, `created_at`
+- `id`, `request_id`, `software_id`, `proposed_by`, `coverage_notes`, `unmet_requirements[]`, `evidence_refs[]`, `language`, `translations`, `version`, `status`, `created_at`
 
 **acceptance_feedback**
 - `id`, `proposal_id`, `request_id`, `user_id`, `verdict` (`accepted` / `partial` / `rejected`), `feedback?`, `created_at`
@@ -295,51 +323,57 @@ Request 1---N Revision/AuditEvent
 **audit_events**
 - `id`, `actor_user_id`, `client_id?`, `event_type`, `entity_id`, `timestamp`, `summary`
 
-**设计要点**：字符串和标签可先保持灵活，不必先建复杂 ontology；存储可追溯的事实及来源；不要将未经核验的 Agent 推断升级成 Verified。公开平台不要保存未经同意的完整聊天内容。
+The implementation also has `record_revisions` (replaced versions), `notifications` (in-app), `reports`, `api_tokens` (personal API tokens), `idempotency_keys` and `rate_limits`. The fields above are logical; the exact schema is in `supabase/migrations/`.
 
-### 8.3 需求状态
+**Design notes**: strings and tags can stay flexible at first, without building a complex ontology up front; store traceable facts and their sources; never upgrade an unverified agent inference to Verified. A public platform must not store full chat content without consent.
 
-- `open`：正在寻找方案。
-- `proposals_available`：有候选方案待评估。
-- `resolved`：原始需求者已经确认某个方案完全满足。
-- `closed`：需求者主动关闭，可能未解决。
-- `removed`：违规或依法移除。
+### 8.3 Request status
 
-提案状态与需求状态独立，避免“创作者提交 = 自动解决”的错误。
+- `open`: looking for a solution.
+- `proposals_available`: there are candidates waiting to be evaluated.
+- `resolved`: the original requester has confirmed that a solution fully meets the need.
+- `closed`: closed by the requester, possibly unsolved.
+- `removed`: removed for a violation or by law.
 
-## 9. Web 端页面范围
+Proposal status and request status are independent, which avoids the "creator submitted = automatically solved" mistake.
+
+## 9. Web pages
 
 ```text
 /
-/software                    软件黄页（普通筛选/排序）
-/software/{slug-or-id}       软件详情与相关需求
-/requests                    需求黄页（普通筛选/排序）
-/requests/{id}               需求详情与候选方案
-/solutions/{id}              方案详情与验收状态
-/creators/{id}               创作者公开资料（可延后）
-/connect                     MCP/客户端连接指南
-/account                     本人需求、提交、通知偏好
-/ai/guide.md                 Agent 标准指引
+/software                    Software directory (ordinary filters/sorting)
+/software/{slug-or-id}       Software details and related requests
+/requests                    Request directory (ordinary filters/sorting)
+/requests/{id}               Request details and candidate solutions
+/solutions/{id}              Solution details and verdict status
+/users/{id}                  A user's public profile
+/history/{type}/{id}         Earlier versions of a record
+/connect                     MCP / client connection guide
+/login                       Sign in
+/account                     Own requests, submissions, notification preferences, API tokens
+/admin                       Moderation (administrators only)
+/privacy, /terms             Privacy policy and terms of service
+/ai/guide.md                 The agent guide
 ```
 
-**Web 规则**：列表和详情通过服务端数据读取或缓存渲染，可做 SEO；浏览器提供传统关键词过滤、筛选、排序即可，不做 LLM 智能搜索。普通用户可以通过表单完成写入，但无强制注册即可浏览。
+**Web rules**: lists and details are rendered on the server from data reads or cache and can be indexed; the browser offers traditional keyword filtering, filters and sorting, with no LLM search. Ordinary users can write through forms, and browsing never requires an account.
 
-## 10. 技术架构
+## 10. Technical architecture
 
-### 10.1 推荐技术栈
+### 10.1 Stack
 
-| 模块 | V1 建议 |
+| Module | V1 implementation |
 |---|---|
-| Web | Next.js + TypeScript |
-| REST + MCP | TypeScript API + Remote MCP Server（共用业务逻辑） |
-| 数据库 | PostgreSQL（或初期 Cloudflare D1，按部署环境取舍） |
-| 身份 | OAuth / Email；适配第三方 Agent 授权 |
-| 定时任务 | 必要时执行数据库维护、通知与过期证据提醒；不运行 LLM |
-| 通知 | 选择性邮件或站内通知 |
-| 运维 | 日志、速率限制、基础监控、备份 |
-| AI 模型 | **服务端不部署或调用** |
+| Web | Cloudflare Worker: Hono + JSX server-side rendering, TypeScript |
+| REST + MCP | One Supabase Edge Function; REST and remote MCP share the business logic |
+| Database | Supabase Postgres; tables are closed to PostgREST and only the Edge Function reads and writes |
+| Identity | Supabase Auth: email, GitHub, Google; remote MCP clients use OAuth 2.1; personal API tokens |
+| Scheduled jobs | None |
+| Notifications | In-app |
+| Operations | Logs, rate limits, audit |
+| AI model | **None deployed or called on the server** |
 
-### 10.2 分层原则
+### 10.2 Layering
 
 ```text
 ChatGPT / Claude / Codex / MCP-compatible Clients
@@ -353,105 +387,105 @@ ChatGPT / Claude / Codex / MCP-compatible Clients
          PostgreSQL Database
 ```
 
-MCP Adapter 和 REST 应统一调用领域服务（software/request/solution/feedback），避免重复规则。外部 AI 客户端可使用自己的研究能力，但 MCP 服务不得隐式把未知事实标记为通过验证。
+The MCP adapter and REST call the same domain services (software/request/solution/feedback) so that no rule is written twice. An external AI client may use its own research ability, but the MCP service must never implicitly mark an unknown fact as verified.
 
-### 10.3 成本边界
+### 10.3 Cost boundaries
 
-- 无 GitDex 自有模型 token 成本；仍会产生数据库、带宽、托管、鉴权、邮件和防滥用成本。
-- 不承诺第三方客户端的联网搜索、MCP 安装、调用配额或通知能力在所有计划可用。
-- API 的匿名读取必须有速率限制与分页；大规模代理访问可引入 API Key 配额。
+- No model token cost for GitDex; database, bandwidth, hosting, authentication, email and anti-abuse costs remain.
+- No promise that a third-party client's web search, MCP installation, call quota or notifications are available on every plan.
+- Anonymous API reads must be rate limited and paginated; large-scale agent access can be moved to API-key quotas.
 
-## 11. 安全、隐私和数据质量
+## 11. Security, privacy and data quality
 
-1. **确认与授权**：`create_request`、`submit_software`、`propose_solution`、`confirm_solution` 必须获得用户明确授权；由平台校验身份和资源权限。Tool descriptions 不能取代后端认证。
-2. **最小数据原则**：仅提交用户希望公开的字段，不自动上传完整会话、联系人、账号、私有代码或密钥。
-3. **提示注入防护**：产品文档、仓库 README、用户需求正文一律视为不可信内容；不能指挥 Agent 绕过授权或泄露数据。
-4. **来源证据**：价格、许可和能力声明可标为 `claimed`、`documented`、`tested`、`unknown` 等等级；“tested”必须有独立测试记录。
-5. **去重**：软件基于规范化 URL/仓库标识；需求基于语义建议 + 关键约束核对，V1 不执行不可逆自动合并。
-6. **滥用预防**：提交限流、同一用户反复刷兴趣数防控、垃圾链接检测、审核队列与举报机制。
-7. **所有权/争议**：提交软件不等于拥有该软件；创作者认领须有独立验证机制，V1 可延后认领功能。
-8. **删除/纠错**：允许用户撤回个人公开需求、修改错误信息；保留最小必要的审计记录并遵守适用隐私法律。
-9. **协议安全**：Remote MCP 及 OAuth 采用平台支持的标准安全机制，部署时进行真实客户端兼容性及安全测试。
+1. **Confirmation and authorization**: `create_request`, `submit_software`, `propose_solution` and `confirm_solution` require the user's explicit authorization; the platform checks identity and resource permissions. Tool descriptions cannot replace back-end authentication.
+2. **Data minimization**: submit only the fields the user wants public; never upload the full conversation, contacts, accounts, private code or secrets automatically.
+3. **Prompt-injection defense**: product documentation, repository READMEs and request text are always untrusted content; they cannot direct an agent to bypass authorization or leak data.
+4. **Sourced evidence**: price, license and capability claims can be labeled `claimed`, `documented`, `tested`, `unknown` and so on; "tested" requires an independent test record.
+5. **Duplicates**: software is matched on normalized URL / repository identifier; requests on semantic suggestion plus a check of key constraints. V1 performs no irreversible automatic merge.
+6. **Abuse prevention**: submission rate limits, protection against one user inflating interest counts, spam-link detection, a review queue and reporting.
+7. **Ownership and disputes**: submitting software is not owning it; a creator claiming software needs an independent verification mechanism, and V1 may defer claiming.
+8. **Deletion and correction**: users can withdraw their own public requests and fix wrong information; keep the minimum necessary audit record and follow applicable privacy law.
+9. **Protocol security**: remote MCP and OAuth use the standard security mechanisms the platforms support, with real-client compatibility and security testing at deployment.
 
-## 12. 核心体验文案
+## 12. Core experience copy
 
-- **消费者搜索后无满意结果**："没有发现已经确认满足全部要求的软件。你可以发布这个需求，让创作者帮你寻找或开发。"
-- **发布前预览**："以下内容将在 GitDex 公开展示。请确认不包含私人信息。"
-- **创作者提交提案后**："解决方案已提交，等待需求者评估；这不代表需求已经解决。"
-- **消费者确认解决**："这个方案是否满足你提出的所有必要条件？"
-- **Agent 证据不足时**："目前尚无法确认这个软件是否具备该功能。"
+- **No satisfactory result after a consumer's search**: "No software confirmed to meet every requirement was found. You can publish this need so creators can help find or build it."
+- **Preview before publishing**: "The following will be shown publicly on GitDex. Please confirm it contains no private information."
+- **After a creator submits a proposal**: "The solution has been submitted and is waiting for the requester to evaluate it; this does not mean the request is resolved."
+- **Consumer confirming a resolution**: "Does this solution meet every requirement you listed as necessary?"
+- **Agent without enough evidence**: "It cannot yet be confirmed whether this software has that capability."
 
-## 13. 里程碑与开发优先级
+## 13. Milestones and development priorities
 
-### M0：协议与领域模型
-- 定义核心实体、状态机、权限、MCP Tool schemas、错误码和 Agent Guide v1。
-- 建立契约测试和几组典型需求样本。
+### M0: Protocol and domain model
+- Define the core entities, state machine, permissions, MCP tool schemas, error codes and Agent Guide v1.
+- Set up contract tests and a few typical sample requests.
 
-### M1：只读数据网络
-- 软件/需求/方案读取 API，MCP 查询工具，Web 黄页与详情。
-- 支持静态分类与关键词过滤、分页和基础 SEO。
+### M1: Read-only data network
+- Read APIs for software, requests and solutions, MCP query tools, web directory and detail pages.
+- Static categories and keyword filtering, pagination and basic SEO.
 
-### M2：双边写入闭环
-- 认证、创建需求、支持需求、提交软件、提出方案、确认方案。
-- 去重检查、写入确认、审计与通知。
+### M2: Two-sided write loop
+- Authentication, creating requests, supporting requests, submitting software, proposing solutions, confirming solutions.
+- Duplicate checks, write confirmation, audit and notifications.
 
-### M3：客户端适配与发布
-- 在至少两个目标客户端上验证可连接、授权、查询和写入；按各自要求处理目录上架和用户引导。
-- 提供 `/connect`、Agent Guide、OpenAPI、实际使用示例。
+### M3: Client adaptation and release
+- Verify connection, authorization, queries and writes on at least two target clients; handle directory listing and user onboarding as each requires.
+- Provide `/connect`, the Agent Guide, OpenAPI and real usage examples.
 
-### M4：质量与运营优化
-- 审核后台、举报入口、误报纠正、计数防作弊、用户反馈分析。
-- 根据实际使用数据决定是否增加需求聚合、创作者分析等功能。
+### M4: Quality and operations
+- Moderation back office, report entry points, correcting false reports, count anti-cheating, user feedback analysis.
+- Decide from real usage data whether to add request aggregation, creator analytics and similar features.
 
-## 14. V1 验收标准
+## 14. V1 acceptance criteria
 
-### 14.1 核心业务验收
-- [ ] 未登录用户可以浏览黄页和详情。
-- [ ] 用户可以通过支持的外部 Agent 查询 GitDex 软件与需求数据。
-- [ ] Agent 可以在没有服务端 LLM 的前提下完成需求草稿整理与提交。
-- [ ] 发布前必须显示即将公开的内容并取得用户确认。
-- [ ] 发布需求前可查询类似需求，并支持关注已有需求。
-- [ ] 创作者可以提交现有软件、关联需求并说明覆盖与不足。
-- [ ] 创作者提交提案不会自动将需求状态改为已解决。
-- [ ] 需求所有者可以接受或拒绝提案；未授权用户无法代替验收。
-- [ ] Web、REST 与 MCP 使用同一数据和状态规则。
-- [ ] 用户可以撤回不希望继续公开的内容，并控制通知。
+### 14.1 Core business
+- [ ] Signed-out users can browse the directories and detail pages.
+- [ ] Users can query GitDex software and request data through a supported external agent.
+- [ ] An agent can draft and submit a request with no server-side LLM.
+- [ ] Before publishing, the content about to become public is shown and the user's confirmation obtained.
+- [ ] Similar requests can be searched before publishing, and an existing request can be followed.
+- [ ] A creator can submit existing software, link it to a request and state coverage and gaps.
+- [ ] A creator's proposal does not change the request status to resolved.
+- [ ] The request owner can accept or reject a proposal; an unauthorized user cannot do so for them.
+- [ ] Web, REST and MCP use the same data and state rules.
+- [ ] Users can withdraw content they no longer want public, and control notifications.
 
-### 14.2 AI Agent 兼容性验收
-- [ ] `FIND`：只查询和推荐，不自动发布。
-- [ ] `REQUEST`：查询相似请求、显示草稿、授权后写入。
-- [ ] `SUBMIT`：软件查重、展示来源、授权后写入。
-- [ ] `SOLVE`：可提议关联，但不会声称自动验收。
-- [ ] `CONFIRM`：需授权需求者明确表达验收结果。
-- [ ] 客户端无法联网时，不会凭空补全来源与价格。
-- [ ] API 对重试具备幂等处理，对未授权写入拒绝。
+### 14.2 AI agent compatibility
+- [ ] `FIND`: only searches and recommends; never publishes automatically.
+- [ ] `REQUEST`: searches similar requests, shows a draft, writes after authorization.
+- [ ] `SUBMIT`: checks for duplicate software, shows sources, writes after authorization.
+- [ ] `SOLVE`: can propose a link, but never claims automatic acceptance.
+- [ ] `CONFIRM`: requires the authorized requester to state the verdict explicitly.
+- [ ] When the client has no web access, it does not make up sources or prices.
+- [ ] The API handles retries idempotently and refuses unauthorized writes.
 
-## 15. 产品健康指标
+## 15. Product health metrics
 
-**北极星指标**：*Verified Resolved Requests* —— 经授权需求者确认满足的公开软件需求数。
+**North star metric**: *Verified Resolved Requests* — the number of public software requests confirmed as met by the authorized requester.
 
-辅助指标：
-- 从搜索到需求发布的转化率（以客户端可提供的聚合事件为限）。
-- 不重复的有效需求数、有效提交软件数、每需求平均候选方案数。
-- 需求首次获得有效提案的时间、提案被接受比例。
-- 创作者获得需求触达和外跳访问的数量。
-- 数据错误/举报率、重复提交率、未授权调用拦截率。
-- 每月 API/MCP 活跃客户端数及单次业务调用成本。
+Supporting metrics:
+- Conversion from search to published request (limited to the aggregate events a client can provide).
+- Distinct valid requests, valid submitted software, average candidates per request.
+- Time until a request gets its first valid proposal; share of proposals accepted.
+- How many requests reach creators, and outbound visits.
+- Data error / report rate, duplicate submission rate, blocked unauthorized calls.
+- Monthly active API/MCP clients and cost per business call.
 
-不以软件收录总量、AI 生成内容数量、伪造的需求兴趣人数作为主要成功指标。
+Total software listed, amount of AI-generated content and inflated interest counts are not primary success metrics.
 
-## 16. 开放问题（非 V1 阻塞）
+## 16. Open questions (not blocking V1)
 
-- 首批重点客户端及各自的连接、OAuth 和市场审核路径。
-- 需求公开策略：默认公开还是默认私有草稿再发布；建议后者。
-- 软件“已找到”是否可以由其他消费者分别确认满足，及统计展示方式。
-- 创作者可见的需求强度是否只展示匿名聚合数据；建议如此。
-- 平台未来是否收费：V1 建议消费者永久免费查询、创作者免费提交，避免付费影响排序。
-- 是否支持创作者认领软件及官方更新；建议后续独立引入。
+- The first priority clients and each one's connection, OAuth and marketplace review path.
+- Request publishing policy: public by default, or a private draft by default and then published; the latter is suggested.
+- Whether other consumers can each confirm that "found" software meets their need, and how to show the statistics.
+- Whether the demand strength creators see should be anonymous aggregates only; suggested yes.
+- Whether the platform charges in future: V1 suggests free search for consumers forever and free submission for creators, so that payment never affects ranking.
+- Whether to support creators claiming software and official updates; suggested as a separate later addition.
 
 ---
 
-## 附录 A：完整标准操作闭环
+## Appendix A: The full standard loop
 
 ```text
 Consumer → AI client → GitDex search_software
@@ -474,7 +508,7 @@ Creator → AI client → search_requests / get_request
                       └─ rejected → remains open
 ```
 
-## 附录 B：示例请求记录（虚构）
+## Appendix B: Sample request record (fictional)
 
 ```json
 {
@@ -489,15 +523,15 @@ Creator → AI client → search_requests / get_request
 }
 ```
 
-## 附录 C：Codex 开发执行建议
+## Appendix C: Suggested implementation order
 
-按照如下顺序实现，避免 Web 与 MCP 各建一套规则：
+Build in this order so that Web and MCP never grow two sets of rules:
 
-1. 定义数据库 schema、API request/response schema、状态机及权限矩阵。
-2. 开发独立的领域服务（Software、Request、Solution、Feedback）。
-3. 为领域服务添加 REST Adapter 和 MCP Adapter。
-4. 实现 `guide.md`、Tool Descriptions、错误码及集成测试。
-5. 最后构建 Web 黄页、详情、连接指引和轻量表单。
-6. 对每种写入操作制作确认、未授权、重复提交与幂等重试测试。
+1. Define the database schema, API request/response schemas, state machine and permission matrix.
+2. Build standalone domain services (Software, Request, Solution, Feedback).
+3. Add a REST adapter and an MCP adapter on top of the domain services.
+4. Implement `guide.md`, tool descriptions, error codes and integration tests.
+5. Build the web directory, detail pages, connection guide and lightweight forms last.
+6. For every write operation, write tests for confirmation, unauthorized use, duplicate submission and idempotent retry.
 
-**总原则**：GitDex 是供 AI Agent 使用的公共软件供需数据网络；网站只是浏览器入口，智能来自客户端而非 GitDex 服务端。
+**Overall principle**: GitDex is a public software demand-and-supply data network for AI agents to use; the website is only the browser entrance, and the intelligence comes from the client, not from GitDex's servers.
