@@ -1,0 +1,28 @@
+{
+  "name": "gitdex-core",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p web/tsconfig.json",
+    "build:client": "esbuild web/client/main.ts --bundle --minify --format=esm --target=es2022 --outfile=web/public/assets/app.js",
+    "dev": "npm run build:client && wrangler dev --config web/wrangler.jsonc",
+    "deploy:web": "npm run build:client && wrangler deploy --config web/wrangler.jsonc",
+    "deploy:api": "supabase functions deploy api --use-api",
+    "db:push": "supabase db push"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261116.1",
+    "@electric-sql/pglite": "^0.5.16",
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.162.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "hono": "^4.13.18"
+  }
+}

@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.dev.vars
+.wrangler/
+supabase/.temp/
+supabase/.branches/
+web/public/assets/app.js
+.DS_Store
+*.log
+
+*.zip
+
+# Deployment-specific worker config; copy web/wrangler.example.jsonc.
+web/wrangler.jsonc

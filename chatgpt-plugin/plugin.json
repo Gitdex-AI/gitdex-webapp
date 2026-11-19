@@ -1,0 +1,89 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "gitdex",
+  "version": "1.0.0",
+  "description": "Search the public GitDex software directory, post a software request when nothing fits, and propose software as a solution to open requests.",
+  "author": {
+    "name": "Paworld Labs LLC",
+    "email": "support@gitdex.ai",
+    "url": "https://gitdex.ai"
+  },
+  "homepage": "https://gitdex.ai",
+  "keywords": ["software", "directory", "requests"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "GitDex",
+        "shortDescription": "Find software or request it",
+        "longDescription": "GitDex is a public network of software records, software requests and proposed solutions.\n\nUse it to search the directory for software that fits a need and read each record's capabilities, platforms, pricing notes and sources. When nothing fits, publish a request that states your goal and must-haves, or support an existing one. Creators can list their software and propose it as a solution to open requests.\n\nEvery publishing action is two-step: you see the exact public preview first, and nothing is written until you approve it. A request is resolved only when the person who posted it accepts a proposal. Records are published in English and Chinese.\n\nLimitations: search is plain keyword matching over what people have submitted, so an empty result does not mean such software does not exist. Listings are submitted by users and are not endorsements. Searching and reading need no account; publishing requires signing in to a GitDex account.",
+        "developerName": "Paworld Labs LLC",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://gitdex.ai",
+        "supportURL": "https://gitdex.ai/connect#help",
+        "privacyPolicyURL": "https://gitdex.ai/privacy",
+        "termsOfServiceURL": "https://gitdex.ai/terms",
+        "defaultPrompt": [
+          "Search GitDex for an app to manage a golf group's tee times and scores.",
+          "What software requests are open on GitDex right now?",
+          "Post a GitDex request for a Mac menu bar time tracker that exports CSV."
+        ],
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Find software in the directory by need.",
+              "prompt": "Search GitDex for an app that helps a regular golf group manage tee times and keep scores.",
+              "tools_triggered": ["search_software"],
+              "expected_behavior": "Calls search_software with keywords such as 'golf' and returns matching records (TeeLab) with platforms and pricing. Nothing is written."
+            },
+            {
+              "description": "Read one software record with its sources.",
+              "prompt": "Show me the GitDex record for DriveRoad: what it does, which platforms it runs on, and its sources.",
+              "tools_triggered": ["search_software", "get_software"],
+              "expected_behavior": "Finds DriveRoad, calls get_software and reports its description, platforms, pricing and evidence, saying which facts are only claimed by the submitter. Nothing is written."
+            },
+            {
+              "description": "Discover open software requests.",
+              "prompt": "What software requests are open on GitDex for iOS? Show me the must-haves of the first one.",
+              "tools_triggered": ["search_requests", "get_request"],
+              "expected_behavior": "Calls search_requests filtered to iOS, then get_request for one result, and lists its goal, must-haves and proposals. Nothing is written."
+            },
+            {
+              "description": "Publish a new request with the two-step confirmation.",
+              "prompt": "Post a request on GitDex for a macOS menu bar app that tracks time per project, works offline and exports CSV.",
+              "tools_triggered": ["search_requests", "create_request"],
+              "expected_behavior": "Checks for a similar request, then calls create_request without confirmed and shows the exact public preview in English and Chinese. It publishes (confirmed=true, same idempotency_key) only after the user explicitly approves the preview."
+            },
+            {
+              "description": "List the signed-in user's own records.",
+              "prompt": "Show my GitDex activity: my requests, the software I submitted and my proposals.",
+              "tools_triggered": ["get_my_activity"],
+              "expected_behavior": "Calls get_my_activity and lists the test account's own requests, software, proposals and followed requests. Nothing is written."
+            }
+          ],
+          "negative": [
+            {
+              "description": "General coding help needs no software directory. GitDex should not be called; the assistant answers directly.",
+              "prompt": "Write a Python script that renames the photos in a folder by the date they were taken."
+            },
+            {
+              "description": "Unrelated factual question. GitDex has no weather data and should not be called.",
+              "prompt": "What's the weather in Tokyo tomorrow?"
+            },
+            {
+              "description": "A question about existing software is not consent to publish. GitDex may search, but must not call create_request or any other write tool.",
+              "prompt": "Is there any app that can scan receipts on Android?"
+            }
+          ]
+        }
+      },
+      "publication": {
+        "release_notes": "First release: search software and requests, publish requests, list software and propose solutions."
+      }
+    }
+  }
+}

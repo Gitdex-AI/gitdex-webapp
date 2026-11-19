@@ -1,0 +1,29 @@
+// Copy to web/wrangler.jsonc (ignored by git) and fill in your own deployment.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "gitdex",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-10-01",
+  // Keep the workers.dev address alongside the custom domains (off by default once routes exist).
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    // The Supabase project URL and its publishable (anon) key. Both reach the browser.
+    "SUPABASE_URL": "https://<project-ref>.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_<key>",
+    // Region of the Supabase database. The API function is pinned to it (x-region).
+    "SUPABASE_REGION": "<region>",
+    // Social sign-in buttons to show, e.g. "github,google", once those providers
+    // are enabled in supabase/config.toml and pushed. Empty shows email sign-in only.
+    "AUTH_PROVIDERS": ""
+    // Optional Google Analytics 4 measurement ID. Loaded on gitdex.ai only.
+    // , "GA_MEASUREMENT_ID": "G-XXXXXXXXXX"
+  }
+  // Secret (set with `wrangler secret put`): GITDEX_PROXY_SECRET
+  // Custom domains, once the zone is on Cloudflare:
+  // , "routes": [{ "pattern": "example.com", "custom_domain": true }]
+}
