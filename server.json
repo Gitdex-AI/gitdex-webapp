@@ -3,8 +3,9 @@
   "name": "ai.gitdex/gitdex",
   "title": "GitDex",
   "description": "Search software, post software requests and propose solutions on the public GitDex network.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "websiteUrl": "https://gitdex.ai/connect",
+  "repository": { "url": "https://github.com/Gitdex-AI/gitdex-webapp", "source": "github" },
   "icons": [
     { "src": "https://gitdex.ai/assets/logo.png", "mimeType": "image/png", "sizes": ["512x512"] }
   ],
