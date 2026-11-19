@@ -244,6 +244,25 @@ describe("submit_software", () => {
     assert.notEqual(one.body.software.slug, two.body.software.slug);
   });
 
+  test("a name with no Latin letters takes its slug from a store listing", async () => {
+    const slugOf = async (id: string) => (await h.api("GET", `/software/${id}`)).body.software.slug;
+    const play = await publishSoftware(h, "bob", {
+      name: "小历",
+      url: "https://xiaoli-play.example.com",
+      google_play_url: "https://play.google.com/store/apps/details?id=com.example.XiaoLi",
+      app_store_url: "https://apps.apple.com/cn/app/id6578435786",
+    });
+    assert.equal(await slugOf(play), "com-example-xiaoli");
+    const appStore = await publishSoftware(h, "bob", {
+      name: "小历",
+      url: "https://xiaoli-ios.example.com",
+      app_store_url: "https://apps.apple.com/cn/app/xiao-li/id6578435786",
+    });
+    assert.equal(await slugOf(appStore), "app-6578435786");
+    const bare = await publishSoftware(h, "bob", { name: "日历", url: "https://rili.example.com" });
+    assert.match(await slugOf(bare), /^software(-[0-9a-f]{5})?$/);
+  });
+
   test("unsafe URLs are rejected", async () => {
     for (const url of ["javascript:alert(1)", "http://localhost:3000", "http://192.168.1.4/app", "https://user:pw@site.example.com", "ftp://files.example.com"]) {
       const res = await h.api("POST", "/software", { as: "bob", key: newKey(), body: { ...SAMPLE_SOFTWARE, url, confirmed: true } });

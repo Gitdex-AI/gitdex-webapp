@@ -260,15 +260,34 @@ export function likePattern(term: string): string {
   return `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
 
+/** The Latin letters and digits of `name` as a URL slug; empty when it has none (a Chinese name, say). */
 export function slugify(name: string): string {
-  const base = name
+  return name
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 48);
-  return base || "software";
+    .slice(0, 48)
+    .replace(/-+$/, "");
+}
+
+/**
+ * The slug a new software record asks for: its name, or, for a name with no
+ * Latin letters or digits, its Google Play package or App Store id. The caller
+ * still makes it unique.
+ */
+export function softwareSlug(
+  name: string,
+  stores: { app_store_url: string | null; google_play_url: string | null },
+): string {
+  const fromName = slugify(name);
+  if (fromName) return fromName;
+  const pkg = stores.google_play_url ? new URL(stores.google_play_url).searchParams.get("id") : null;
+  if (pkg) return slugify(pkg);
+  const appId = stores.app_store_url?.match(/\/id(\d+)$/)?.[1];
+  if (appId) return `app-${appId}`;
+  return "software";
 }
 
 export function searchText(parts: (string | null | string[])[]): string {

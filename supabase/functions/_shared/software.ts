@@ -24,7 +24,7 @@ import {
 } from "./languages.ts";
 import { userIdFilter } from "./profiles.ts";
 import { changedFields, pick, requireAuthor, saveRevision } from "./revisions.ts";
-import { imageUrl, likePattern, searchTerms, searchText, slugify, storeUrl, Validator } from "./validate.ts";
+import { imageUrl, likePattern, searchTerms, searchText, softwareSlug, storeUrl, Validator } from "./validate.ts";
 
 export const PRICING_TYPES = ["free", "freemium", "paid", "subscription", "open_source", "unknown"] as const;
 
@@ -345,7 +345,7 @@ export async function submitSoftware(ctx: Ctx, input: unknown, opts: WriteOption
     );
   }
 
-  let slug = slugify(name);
+  let slug = softwareSlug(name, stores);
   const taken = await ctx.db.query(`select 1 as x from software where slug = $1::text`, [slug]);
   if (taken.length) slug = `${slug}-${crypto.randomUUID().slice(0, 5)}`;
 
