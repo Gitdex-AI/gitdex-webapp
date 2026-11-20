@@ -171,7 +171,8 @@ Tools: \`get_my_activity\`, \`get_request\`, \`get_solution\`, \`confirm_solutio
 - Never infer acceptance from a click or from the creator's claim.
 - Only the original requester's \`accepted\` resolves the request. \`partial\` and \`rejected\` keep it
   open. Supporters of a request can record their own verdict; it is stored as individual feedback
-  and changes no status. A proposer cannot judge their own proposal.`;
+  and changes no status. The requester may judge a proposal they made themselves;
+  a supporter cannot judge their own.`;
 
 export function guideDocs(baseUrl: string): Record<string, string> {
   const endpoints = `## Endpoints

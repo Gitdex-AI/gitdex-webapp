@@ -26,7 +26,7 @@ ChatGPT / Claude / Codex / any MCP client          Browser
 ```
 
 - **One operation registry** (`_shared/operations.ts`) defines every business operation once. The REST routes, the MCP tools and `/openapi.json` are generated from it, so they cannot drift.
-- **All rules live on the server**, not in prompts: sign-in for writes, `confirmed: true` only after a server-generated preview, idempotency keys, duplicate detection, "a proposal never resolves a request", "only the original requester's acceptance resolves", "a proposer cannot accept their own proposal".
+- **All rules live on the server**, not in prompts: sign-in for writes, `confirmed: true` only after a server-generated preview, idempotency keys, duplicate detection, "a proposal never resolves a request", "only the original requester's acceptance resolves", "only the requester may judge their own proposal".
 - **Tables are closed to PostgREST** (RLS on, no policies, grants revoked). Only the Edge Function touches data.
 - **No LLM** is called anywhere.
 

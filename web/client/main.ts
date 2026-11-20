@@ -303,9 +303,10 @@ function bindLightbox(): void {
 
 function showVerdictForms(viewer: { owner: boolean; supporter: boolean }, userId: string): void {
   document.querySelectorAll<HTMLElement>("form[data-verdict-for]").forEach((form) => {
-    const ownProposal = form.dataset.proposer === userId;
+    // The requester judges every proposal on their request, their own included; a supporter never their own.
     const asOwner = viewer.owner && form.dataset.requestActive === "1";
-    form.hidden = ownProposal || !(asOwner || viewer.supporter);
+    const asSupporter = viewer.supporter && form.dataset.proposer !== userId;
+    form.hidden = !(asOwner || asSupporter);
   });
 }
 

@@ -3,7 +3,8 @@
 // Invariants enforced here, independent of any prompt or tool description:
 //   - proposing never resolves a request
 //   - only the original requester's "accepted" verdict resolves it
-//   - a proposer can never accept their own proposal
+//   - the original requester judges every proposal on their request, their own included;
+//     anyone else cannot judge a proposal they made
 //   - supporters record their own feedback without changing any status
 
 import {
@@ -180,7 +181,7 @@ export async function confirmSolution(ctx: Ctx, input: unknown, opts: WriteOptio
   if (proposal.status === "withdrawn") {
     throw new GitdexError("INVALID_STATE", "This proposal was withdrawn by its proposer.");
   }
-  if (proposal.proposed_by === actor.id) {
+  if (proposal.proposed_by === actor.id && !isOwner) {
     throw new GitdexError("FORBIDDEN", "You cannot record a verdict on your own proposal.");
   }
   if (isOwner && !ACTIVE_STATUSES.includes(request.status)) {

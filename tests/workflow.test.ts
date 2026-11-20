@@ -385,13 +385,23 @@ describe("propose_solution and confirm_solution", () => {
     assert.equal(viaMcp.data.items[0].id, accepted);
   });
 
-  test("a proposer who owns the request cannot accept their own proposal", async () => {
+  test("the requester can judge a proposal they made, a supporter cannot judge their own", async () => {
     const requestId = await publishRequest(h, "alice", { title: "Self acceptance request" });
     const softwareId = await publishSoftware(h, "alice", { name: "Candidate D", url: "https://candidate-d.example.com" });
-    const proposalId = await publishProposal(h, "alice", requestId, softwareId);
-    const res = await h.api("POST", `/solutions/${proposalId}/confirm`, { as: "alice", key: newKey(), body: { verdict: "accepted", confirmed: true } });
-    assert.equal(res.status, 403);
-    assert.equal((await h.api("GET", `/requests/${requestId}`)).body.request.status, "proposals_available");
+    const own = await publishProposal(h, "alice", requestId, softwareId);
+
+    await h.api("POST", `/requests/${requestId}/support`, { as: "carol", key: newKey(), body: {} });
+    const other = await publishSoftware(h, "carol", { name: "Candidate D2", url: "https://candidate-d2.example.com" });
+    const carols = await publishProposal(h, "carol", requestId, other);
+    const supporterOwn = await h.api("POST", `/solutions/${carols}/confirm`, { as: "carol", key: newKey(), body: { verdict: "accepted", confirmed: true } });
+    assert.equal(supporterOwn.status, 403);
+
+    const preview = await h.api("POST", `/solutions/${own}/confirm`, { as: "alice", key: newKey(), body: { verdict: "accepted" } });
+    assert.equal(preview.body.error.code, "CONFIRMATION_REQUIRED");
+    assert.equal(preview.body.error.details.preview.recorded_as, "requester");
+    const res = await h.api("POST", `/solutions/${own}/confirm`, { as: "alice", key: newKey(), body: { verdict: "accepted", confirmed: true } });
+    assert.equal(res.status, 200);
+    assert.equal((await h.api("GET", `/requests/${requestId}`)).body.request.status, "resolved");
   });
 
   test("partial and rejected verdicts keep the request open", async () => {

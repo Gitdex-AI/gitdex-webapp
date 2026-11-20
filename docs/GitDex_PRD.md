@@ -86,7 +86,7 @@ One account can be both a consumer and a creator; nobody has to choose a role.
    - **Build**: develop software with their own AI coding tools; GitDex takes no part in, and does not guarantee, the development.
 4. The agent checks what it can of the software's website, repository and documentation, and calls `search_software` to avoid duplicates.
 5. After the user confirms the submission, call `submit_software` (if there is no record yet), then `propose_solution`, stating which requirements are covered and the known limits.
-6. The platform notifies the relevant requesters to try it; a creator cannot mark their own proposal as "resolved".
+6. The platform notifies the relevant requesters to try it; only the original requester's acceptance marks the request "resolved". A requester who proposed a solution to their own request may still accept it; nobody else can judge their own proposal.
 
 ### 4.3 Web users without an AI client
 
