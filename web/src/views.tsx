@@ -170,14 +170,15 @@ const VersionNote: FC<{ ctx: PageCtx; v: any }> = ({ ctx, v }) => {
 };
 
 /** "Version 3 · Earlier versions" under a record that has been edited. */
-const VersionLine: FC<{ ctx: PageCtx; type: string; id: string; version: unknown }> = ({ ctx, type, id, version }) =>
-  Number(version) > 1
-    ? (
-      <p class="muted version-note">
-        {ctx.t("versionLabel")} {Number(version)} · <a href={`/history/${type}/${id}`}>{ctx.t("historyLink")}</a>
-      </p>
-    )
-    : null;
+/** The record's id (what an agent is given to act on it) and, once edited, its version and history link. */
+const VersionLine: FC<{ ctx: PageCtx; type: string; id: string; version: unknown }> = ({ ctx, type, id, version }) => (
+  <p class="muted version-note">
+    <code>{id}</code>
+    {Number(version) > 1
+      ? <>{" · "}{ctx.t("versionLabel")} {Number(version)} · <a href={`/history/${type}/${id}`}>{ctx.t("historyLink")}</a></>
+      : null}
+  </p>
+);
 
 /** App-style icon. The image is the submitter's own https URL; without one, the name's first letter. */
 const AppIcon: FC<{ s: any; large?: boolean }> = ({ s, large }) => {
@@ -779,7 +780,7 @@ export const RequestPage: FC<{ ctx: PageCtx; data: any }> = ({ ctx, data }) => {
   return (
     <Layout ctx={ctx} title={r.title} description={r.goal} ogType="article" jsonLd={[crumbs(ctx, t("requestsTitle"), "/requests", r.title)]}>
       <article class="detail" data-page="request" data-request-id={r.id} data-owner={r.owner.id} data-active={active ? "1" : "0"}>
-        <p class="crumbs"><a href="/requests">{t("requestsTitle")}</a> / <code>{r.id}</code></p>
+        <p class="crumbs"><a href="/requests">{t("requestsTitle")}</a> / {r.title}</p>
         <h1>{r.title}</h1>
         <p class="row-meta">
           <Badge kind={r.status}>{label(t, "status", r.status)}</Badge>
@@ -921,7 +922,7 @@ function softwareJsonLd(ctx: PageCtx, s: any): unknown[] {
       name: s.name,
       description: s.description,
       url: `${ctx.origin}/software/${s.slug}`,
-      sameAs: [https(s.canonical_url), https(s.repository_url), ...stores].filter(Boolean),
+      sameAs: [...new Set([https(s.canonical_url), https(s.repository_url), ...stores].filter(Boolean))],
       operatingSystem: Array.isArray(s.platforms) && s.platforms.length ? s.platforms.join(", ") : undefined,
       applicationCategory: Array.isArray(s.category) && s.category.length ? s.category.join(", ") : undefined,
       image: https(s.icon_url),
@@ -946,7 +947,7 @@ export const SoftwarePage: FC<{ ctx: PageCtx; data: any }> = ({ ctx, data }) => 
   return (
     <Layout ctx={ctx} title={softwareTitle(ctx, s)} description={s.description} jsonLd={softwareJsonLd(ctx, s)}>
       <article class="detail" data-page="software">
-        <p class="crumbs"><a href="/software">{t("softwareTitle")}</a> / <code>{s.id}</code></p>
+        <p class="crumbs"><a href="/software">{t("softwareTitle")}</a> / {s.name}</p>
         <header class="app-head">
           <AppIcon s={s} large />
           <div class="app-head-main">
